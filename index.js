@@ -65,7 +65,7 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
     Type: "AWS::CloudFront::CloudFrontOriginAccessIdentity",
     Properties: {
       CloudFrontOriginAccessIdentityConfig: {
-        // Comment: null
+        Comment: { "Fn::Sub": "CloudFront OAI for ${AWS::StackName}" }
       }
     }
   };
