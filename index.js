@@ -42,7 +42,7 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
     ["page-default"]: pageDefault,
     ["page-403"]: page403,
     ["page-404"]: page404,
-    ["bucket"]: bucketName = "Static"
+    bucket: bucketName = "Static"
   } = cloudfront;
 
   // Resource names
