@@ -153,8 +153,7 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
         ],
         PriceClass: "PriceClass_All",
         ViewerCertificate: null
-      },
-      Tags: [...sam.Resources[bucket.Name].Properties.Tags]
+      }
     }
   };
 
