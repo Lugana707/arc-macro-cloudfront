@@ -1,5 +1,5 @@
 {
-  "name": "arc-plugin-cloudfront",
+  "name": "@architect/arc-macro-cloudfront",
   "version": "1.0.0",
   "description": "Architect serverless framework plugin that creates a CloudFront distribution for your S3 bucket",
   "main": "index.js",
