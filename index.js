@@ -53,7 +53,7 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
   if (!sam.Resources[bucket.Name]) {
     console.error("Cannot find bucket!", { bucketName, bucket, sam });
 
-    return sam;
+    throw "Cannot find bucket!";
   }
 
   // https://github.com/aws-samples/amazon-cloudfront-secure-static-site/blob/master/templates/cloudfront-site.yaml
@@ -166,7 +166,7 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
       { cloudFrontDistribution, cloudFrontOriginAccessIdentity }
     );
 
-    return sam;
+    throw "Cannot create resources in CloudFormation - names already in use!";
   }
 
   sam.Resources[cloudFrontDistribution.Name] = cloudFrontDistribution.sam;
