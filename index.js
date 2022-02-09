@@ -1,5 +1,7 @@
+const { toLogicalID } = require("@architect/utils");
+
 /**
- * Architect serverless framework macro that creates a CloudFront distribution for your S3 bucket
+ * Architect serverless framework macro that creates a CloudFront distribution for an S3 bucket
  *
  * @param {object} arc - Parsed `app.arc` value
  * @param {object} sam - Generated CloudFormation template
@@ -13,9 +15,11 @@ module.exports = async function cloudfront(arc, sam, stage = "staging") {
     return sam;
   }
 
-  if (!arc.cloudfront) {
+  // Only run is @cloudfront-distribution is defined
+  const cloudfront = arc["cloudfront-distribution"];
+  if (!cloudfront) {
     console.warn(
-      "No Cloudfront configuration available! Please add @cloudfront to your arc config file."
+      "No Cloudfront configuration available! Please add @cloudfront-distribution to your arc config file."
     );
 
     return sam;
@@ -34,31 +38,81 @@ module.exports = async function cloudfront(arc, sam, stage = "staging") {
     };
   };
 
-  const { pageDefault, page403, page404 } = arc.cloudfront;
+  const { staticBucketPolicy } = sam;
+
+  if (!staticBucketPolicy) {
+    console.error("Cannot find static bucket policy!", { sam });
+
+    return sam;
+  }
+
+  const {
+    ["page-default"]: pageDefault,
+    ["page-403"]: page403,
+    ["page-404"]: page404,
+    ["bucket"]: bucketName = "static"
+  } = cloudfront;
+
+  // Resource names
+  const bucket = {};
+  bucket.ID = toLogicalID(bucketName);
+  bucket.Name = `${bucket.ID}Bucket`;
 
   // https://github.com/aws-samples/amazon-cloudfront-secure-static-site/blob/master/templates/cloudfront-site.yaml
 
-  // S3 Bucket Policy
-  const s3BucketPolicy = {
-    Type: "WS::S3::BucketPolicy",
+  // CloudFront Origin Access Identity
+  const cloudFrontOriginAccessIdentity = {};
+  cloudFrontOriginAccessIdentity.ID = toLogicalID(bucketName);
+  cloudFrontOriginAccessIdentity.Name = `${cloudFrontOriginAccessIdentity.ID}CloudFrontOriginAccessIdentity`;
+  cloudFrontOriginAccessIdentity.sam = {
+    Type: "AWS::CloudFront::CloudFrontOriginAccessIdentity",
     Properties: {
-      Bucket: null,
-      PolicyDocument: {
-        Version: "2012-10-17",
-        Statement: [
-          {
-            Action: ["s3:GetObject"],
-            Effect: "Allow",
-            Resource: null,
-            Principal: { CanonicalUser: null }
-          }
-        ]
+      CloudFrontOriginAccessIdentityConfig: {
+        Comment: null
+      }
+    }
+  };
+
+  // Response Headers Policy
+  const responseHeadersPolicy = {};
+  responseHeadersPolicy.ID = toLogicalID(bucketName);
+  responseHeadersPolicy.Name = `${responseHeadersPolicy.ID}ResponseHeadersPolicy`;
+  responseHeadersPolicy.sam = {
+    Type: "AWS::CloudFront::ResponseHeadersPolicy",
+    Properties: {
+      ResponseHeadersPolicyConfig: {
+        Name: { "Fn::Sub": "${AWS::StackName}-static-site-security-headers" },
+        SecurityHeadersConfig: {
+          StrictTransportSecurity: {
+            AccessControlMaxAgeSec: 63072000,
+            IncludeSubdomains: true,
+            Override: true,
+            Preload: true
+          },
+          ContentSecurityPolicy: {
+            ContentSecurityPolicy:
+              "default-src 'none'; img-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'",
+            Override: true
+          },
+          ContentTypeOptions: {
+            Override: true
+          },
+          FrameOptions: {
+            FrameOption: DENY,
+            Override: true
+          },
+          ReferrerPolicy: { ReferrerPolicy: "same-origin", Override: true },
+          XSSProtection: { ModeBlock: true, Override: true, Protection: true }
+        }
       }
     }
   };
 
   // CloudFront Distribution
-  const cloudFrontDistribution = {
+  const cloudFrontDistribution = {};
+  cloudFrontDistribution.ID = toLogicalID(bucketName);
+  cloudFrontDistribution.Name = `${cloudFrontDistribution.ID}CloudFrontDistribution`;
+  cloudFrontDistribution.sam = {
     Type: "AWS::CloudFront::Distribution",
     Properties: {
       DistributionConfig: {
@@ -76,16 +130,32 @@ module.exports = async function cloudfront(arc, sam, stage = "staging") {
             QueryString: true
           },
           MaxTTL: 31536000,
-          TargetOriginId: null,
+          TargetOriginId: { "Fn::Sub": "S3-${AWS::StackName}-root" },
           ViewerProtocolPolicy: "redirect-to-https",
-          ResponseHeadersPolicyId: null
+          ResponseHeadersPolicyId: { Ref: responseHeadersPolicy.Name }
         },
         DefaultRootObject: pageDefault,
         Enabled: true,
         HttpVersion: "http2",
         IPV6Enabled: true,
         Logging: null,
-        Origins: null,
+        Origins: [
+          {
+            DomainName: { Ref: bucket.Name },
+            Id: { "Fn::Sub": "S3-${AWS::StackName}-root" },
+            S3OriginConfig: {
+              OriginAccessIdentity: {
+                "Fn::Join": [
+                  "",
+                  [
+                    "origin-access-identity/cloudfront/",
+                    { Ref: cloudFrontOriginAccessIdentity.Name }
+                  ]
+                ]
+              }
+            }
+          }
+        ],
         PriceClass: "PriceClass_All",
         ViewerCertificate: null
       },
@@ -93,32 +163,29 @@ module.exports = async function cloudfront(arc, sam, stage = "staging") {
     }
   };
 
-  // CloudFront Origin Access Identity
-  const cloudFrontOriginAccessIdentity = {
-    Type: "AWS::CloudFront::CloudFrontOriginAccessIdentity",
-    Properties: {
-      CloudFrontOriginAccessIdentityConfig: {
-        Comment: null
-      }
-    }
-  };
-
   if (
-    sam.Resources.s3BucketPolicy ||
-    sam.Resources.cloudFrontDistribution ||
-    sam.Resources.cloudFrontOriginAccessIdentity
+    sam.Resources[cloudFrontDistribution.Name] ||
+    sam.Resources[cloudFrontOriginAccessIdentity.name]
   ) {
     console.error(
       "Cannot create resources in CloudFormation - names already in use!",
-      { s3BucketPolicy, cloudFrontDistribution, cloudFrontOriginAccessIdentity }
+      { cloudFrontDistribution, cloudFrontOriginAccessIdentity }
     );
 
     return sam;
   }
 
-  sam.Resources.S3BucketPolicy = s3BucketPolicy;
-  sam.Resources.CloudFrontDistribution = cloudFrontDistribution;
-  sam.Resources.CloudFrontOriginAccessIdentity = cloudFrontOriginAccessIdentity;
+  sam.Resources[cloudFrontDistribution.Name] = cloudFrontDistribution.sam;
+  sam.Resources[cloudFrontOriginAccessIdentity.name] =
+    cloudFrontOriginAccessIdentity.sam;
+
+  // Add outputs for new CloudFront Distribution
+  cloudformation.Outputs[cloudFrontDistribution.Name] = {
+    Description: "CloudFront distribution",
+    Value: {
+      "Fn::GetAtt": `${cloudFrontDistribution.Name}.DomainName`
+    }
+  };
 
   return sam;
 };
