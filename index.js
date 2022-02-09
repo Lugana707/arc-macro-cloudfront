@@ -38,14 +38,6 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
     };
   };
 
-  const { [toLogicalID("StaticBucketPolicy")]: staticBucketPolicy } = sam;
-
-  if (!staticBucketPolicy) {
-    console.error("Cannot find static bucket policy!", { sam });
-
-    return sam;
-  }
-
   const {
     ["page-default"]: pageDefault,
     ["page-403"]: page403,
