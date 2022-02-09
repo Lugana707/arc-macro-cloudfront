@@ -42,7 +42,7 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
     ["page-default"]: pageDefault,
     ["page-403"]: page403,
     ["page-404"]: page404,
-    ["bucket"]: bucketName = "static"
+    ["bucket"]: bucketName = "Static"
   } = cloudfront;
 
   // Resource names
@@ -50,12 +50,17 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
   bucket.ID = toLogicalID(bucketName);
   bucket.Name = `${bucket.ID}Bucket`;
 
+  if (!sam[bucket.Name]) {
+    console.error("Cannot find bucket!", { bucketName, bucket, sam });
+
+    return sam;
+  }
+
   // https://github.com/aws-samples/amazon-cloudfront-secure-static-site/blob/master/templates/cloudfront-site.yaml
 
   // CloudFront Origin Access Identity
   const cloudFrontOriginAccessIdentity = {};
-  cloudFrontOriginAccessIdentity.ID = toLogicalID(bucketName);
-  cloudFrontOriginAccessIdentity.Name = `${cloudFrontOriginAccessIdentity.ID}CloudFrontOriginAccessIdentity`;
+  cloudFrontOriginAccessIdentity.Name = `${bucket.ID}CloudFrontOriginAccessIdentity`;
   cloudFrontOriginAccessIdentity.sam = {
     Type: "AWS::CloudFront::CloudFrontOriginAccessIdentity",
     Properties: {
@@ -67,8 +72,7 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
 
   // Response Headers Policy
   const responseHeadersPolicy = {};
-  responseHeadersPolicy.ID = toLogicalID(bucketName);
-  responseHeadersPolicy.Name = `${responseHeadersPolicy.ID}ResponseHeadersPolicy`;
+  responseHeadersPolicy.Name = `${bucket.ID}ResponseHeadersPolicy`;
   responseHeadersPolicy.sam = {
     Type: "AWS::CloudFront::ResponseHeadersPolicy",
     Properties: {
@@ -102,8 +106,7 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
 
   // CloudFront Distribution
   const cloudFrontDistribution = {};
-  cloudFrontDistribution.ID = toLogicalID(bucketName);
-  cloudFrontDistribution.Name = `${cloudFrontDistribution.ID}CloudFrontDistribution`;
+  cloudFrontDistribution.Name = `${bucket.ID}CloudFrontDistribution`;
   cloudFrontDistribution.sam = {
     Type: "AWS::CloudFront::Distribution",
     Properties: {
