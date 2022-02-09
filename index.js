@@ -151,7 +151,7 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
         PriceClass: "PriceClass_All",
         ViewerCertificate: null
       },
-      Tags: [...arc.s3.Properties.Tags]
+      Tags: [...sam[bucket.Name].Properties.Tags]
     }
   };
 
