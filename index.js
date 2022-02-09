@@ -8,7 +8,7 @@ const { toLogicalID } = require("@architect/utils");
  * @param {string} stage - Deployment target runtime environment 'staging' or 'production'
  * @returns {object} Modified CloudFormation template
  */
-module.exports = async function cloudfront(arc, sam, stage = "staging") {
+module.exports = function cloudfront(arc, sam, stage = "staging") {
   if (!arc.static) {
     console.warn("No static S3 bucket configured!");
 
