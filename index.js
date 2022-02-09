@@ -159,6 +159,7 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
 
   if (
     sam.Resources[cloudFrontDistribution.Name] ||
+    sam.Resources[responseHeadersPolicy.Name] ||
     sam.Resources[cloudFrontOriginAccessIdentity.Name]
   ) {
     console.error(
@@ -170,6 +171,7 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
   }
 
   sam.Resources[cloudFrontDistribution.Name] = cloudFrontDistribution.sam;
+  sam.Resources[responseHeadersPolicy.Name] = responseHeadersPolicy.sam;
   sam.Resources[cloudFrontOriginAccessIdentity.Name] =
     cloudFrontOriginAccessIdentity.sam;
 
