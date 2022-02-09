@@ -65,7 +65,7 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
     Type: "AWS::CloudFront::CloudFrontOriginAccessIdentity",
     Properties: {
       CloudFrontOriginAccessIdentityConfig: {
-        Comment: null
+        // Comment: null
       }
     }
   };
@@ -111,13 +111,13 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
     Type: "AWS::CloudFront::Distribution",
     Properties: {
       DistributionConfig: {
-        Aliases: null,
-        Comment: null,
+        // Aliases: null,
+        // Comment: "",
         CustomErrorResponses: [
           generateCustomErrorResponse({ path: page403, code: 403 }),
           generateCustomErrorResponse({ path: page404, code: 404 })
         ].filter(Boolean),
-        CustomOrigin: null,
+        // CustomOrigin: null,
         DefaultCacheBehavior: {
           Compress: true,
           DefaultTTL: 86400,
@@ -133,7 +133,7 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
         Enabled: true,
         HttpVersion: "http2",
         IPV6Enabled: true,
-        Logging: null,
+        // Logging: null,
         Origins: [
           {
             DomainName: { Ref: bucket.Name },
@@ -151,8 +151,8 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
             }
           }
         ],
-        PriceClass: "PriceClass_All",
-        ViewerCertificate: null
+        PriceClass: "PriceClass_All"
+        // ViewerCertificate: null
       }
     }
   };
