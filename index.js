@@ -109,6 +109,7 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
   cloudFrontDistribution.Name = `${bucket.ID}CloudFrontDistribution`;
   cloudFrontDistribution.sam = {
     Type: "AWS::CloudFront::Distribution",
+    DependsOn: [bucket.Name],
     Properties: {
       DistributionConfig: {
         // Aliases: null,
@@ -136,7 +137,9 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
         // Logging: null,
         Origins: [
           {
-            DomainName: { Ref: bucket.Name },
+            DomainName: {
+              "Fn::GetAtt": [bucket.Name, "RegionalDomainName"]
+            },
             Id: { "Fn::Sub": "S3-${AWS::StackName}-root" },
             S3OriginConfig: {
               OriginAccessIdentity: {
