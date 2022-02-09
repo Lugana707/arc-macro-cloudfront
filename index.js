@@ -90,7 +90,7 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
             Override: true
           },
           FrameOptions: {
-            FrameOption: DENY,
+            FrameOption: "DENY",
             Override: true
           },
           ReferrerPolicy: { ReferrerPolicy: "same-origin", Override: true },
