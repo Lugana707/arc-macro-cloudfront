@@ -50,7 +50,7 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
   bucket.ID = toLogicalID(bucketName);
   bucket.Name = `${bucket.ID}Bucket`;
 
-  if (!sam[bucket.Name]) {
+  if (!sam.Resources[bucket.Name]) {
     console.error("Cannot find bucket!", { bucketName, bucket, sam });
 
     return sam;
@@ -154,7 +154,7 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
         PriceClass: "PriceClass_All",
         ViewerCertificate: null
       },
-      Tags: [...sam[bucket.Name].Properties.Tags]
+      Tags: [...sam.Resources[bucket.Name].Properties.Tags]
     }
   };
 
