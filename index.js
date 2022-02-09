@@ -159,7 +159,7 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
 
   if (
     sam.Resources[cloudFrontDistribution.Name] ||
-    sam.Resources[cloudFrontOriginAccessIdentity.name]
+    sam.Resources[cloudFrontOriginAccessIdentity.Name]
   ) {
     console.error(
       "Cannot create resources in CloudFormation - names already in use!",
@@ -170,7 +170,7 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
   }
 
   sam.Resources[cloudFrontDistribution.Name] = cloudFrontDistribution.sam;
-  sam.Resources[cloudFrontOriginAccessIdentity.name] =
+  sam.Resources[cloudFrontOriginAccessIdentity.Name] =
     cloudFrontOriginAccessIdentity.sam;
 
   // Add outputs for new CloudFront Distribution
