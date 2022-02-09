@@ -38,7 +38,7 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
     };
   };
 
-  const { staticBucketPolicy } = sam;
+  const { [toLogicalID("StaticBucketPolicy")]: staticBucketPolicy } = sam;
 
   if (!staticBucketPolicy) {
     console.error("Cannot find static bucket policy!", { sam });
