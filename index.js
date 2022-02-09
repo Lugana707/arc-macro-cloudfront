@@ -174,7 +174,7 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
     cloudFrontOriginAccessIdentity.sam;
 
   // Add outputs for new CloudFront Distribution
-  cloudformation.Outputs[cloudFrontDistribution.Name] = {
+  sam.Outputs[cloudFrontDistribution.Name] = {
     Description: "CloudFront distribution",
     Value: {
       "Fn::GetAtt": `${cloudFrontDistribution.Name}.DomainName`
