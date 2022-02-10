@@ -25,25 +25,15 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
     return sam;
   }
 
-  const generateCustomErrorResponse = ({ path, code }) => {
-    if (!path) {
-      return null;
-    }
-
-    return {
-      ErrorCachingMinTTL: 60,
-      ErrorCode: code,
-      ResponseCode: code,
-      ResponsePagePath: path
-    };
-  };
-
   const {
-    ["page-default"]: pageDefault,
-    ["page-403"]: page403,
-    ["page-404"]: page404,
+    "page-default": pageDefault,
+    "page-403": page403,
+    "page-404": page404,
     bucket: bucketName = "Static"
-  } = cloudfront;
+  } = cloudfront.reduce(
+    (accumulator, [key, value]) => ({ ...accumulator, [key]: value }),
+    {}
+  );
 
   // Resource names
   const bucket = {};
@@ -105,6 +95,19 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
   };
 
   // CloudFront Distribution
+  const generateCustomErrorResponse = ({ path, code }) => {
+    if (!path) {
+      return null;
+    }
+
+    return {
+      ErrorCachingMinTTL: 60,
+      ErrorCode: code,
+      ResponseCode: code,
+      ResponsePagePath: path
+    };
+  };
+
   const cloudFrontDistribution = {};
   cloudFrontDistribution.Name = `${bucket.ID}CloudFrontDistribution`;
   cloudFrontDistribution.sam = {
