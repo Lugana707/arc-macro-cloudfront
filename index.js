@@ -180,7 +180,7 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
 
   // Add outputs for new CloudFront Distribution
   sam.Outputs[cloudFrontDistribution.Name] = {
-    Description: "CloudFront distribution",
+    Description: "CloudFront Distribution URL",
     Value: {
       "Fn::GetAtt": `${cloudFrontDistribution.Name}.DomainName`
     }
