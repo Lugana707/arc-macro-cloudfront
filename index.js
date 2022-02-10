@@ -95,6 +95,14 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
   };
 
   // CloudFront Distribution
+  const prependPathWithSlash = path => {
+    if (path.startsWith("/")) {
+      return path;
+    }
+
+    return `/${path}`;
+  };
+
   const generateCustomErrorResponse = ({ path, code }) => {
     if (!path) {
       return null;
@@ -104,7 +112,7 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
       ErrorCachingMinTTL: 60,
       ErrorCode: code,
       ResponseCode: code,
-      ResponsePagePath: path
+      ResponsePagePath: prependPathWithSlash(path)
     };
   };
 
@@ -133,7 +141,7 @@ module.exports = function cloudfront(arc, sam, stage = "staging") {
           ViewerProtocolPolicy: "redirect-to-https",
           ResponseHeadersPolicyId: { Ref: responseHeadersPolicy.Name }
         },
-        DefaultRootObject: pageDefault,
+        DefaultRootObject: prependPathWithSlash(pageDefault),
         Enabled: true,
         HttpVersion: "http2",
         IPV6Enabled: true,
